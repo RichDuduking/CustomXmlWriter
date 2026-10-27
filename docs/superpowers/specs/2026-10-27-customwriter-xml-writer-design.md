@@ -1,30 +1,29 @@
-# CustomWriter Basic XML Writer Design
+# CustomWriter 基础 XML 写出器设计
 
-## Purpose
+## 目标
 
-CustomWriter is a small C++17 project that writes XML documents through
-`std::ofstream`. It provides a reusable `XmlWriter` library and a command-line
-example that writes a sample document to a caller-selected path.
+CustomWriter 是一个使用 C++17 编写的小型项目，通过 `std::ofstream`
+写出 XML 文档。项目同时提供可复用的 `XmlWriter` 库，以及一个将示例
+文档写到调用方指定路径的命令行程序。
 
-## Scope
+## 范围
 
-The basic writer supports:
+基础版写出器支持：
 
-- UTF-8 XML declaration output.
-- Nested elements.
-- Attributes.
-- Text content.
-- Empty elements.
-- XML escaping.
-- Configurable indentation with a two-space default.
-- File-open, write, nesting, and document-structure error reporting.
+- 写出 UTF-8 XML 声明。
+- 嵌套元素。
+- 属性。
+- 文本内容。
+- 空元素。
+- XML 特殊字符转义。
+- 可配置缩进，默认使用两个空格。
+- 文件打开、写入、嵌套及文档结构错误报告。
 
-The writer does not support comments, CDATA, raw XML fragments, mixed text and
-child-element content, schema validation, XML parsing, or changes to XML
-encoding. Invalid Unicode and control characters are the caller's
-responsibility.
+基础版不支持注释、CDATA、原始 XML 片段、同一元素内混合文本和子元素、
+Schema 校验、XML 解析或修改 XML 编码。无效 Unicode 字符和控制字符由
+调用方负责处理。
 
-## Project Structure
+## 项目结构
 
 ```text
 CustomWriter/
@@ -37,11 +36,11 @@ CustomWriter/
   docs/superpowers/specs/
 ```
 
-`xml_writer.cpp` is compiled into a reusable `custom_writer` library.
-`main.cpp` links that library and acts as a working example. The test
-executable also links the library and is registered with CTest.
+`xml_writer.cpp` 会被编译为可复用的 `custom_writer` 库。`main.cpp`
+链接该库并提供可直接运行的示例。测试程序同样链接该库，并注册到
+CTest。
 
-## Public API
+## 公共接口
 
 ```cpp
 namespace custom_writer {
@@ -80,62 +79,61 @@ class XmlWriter {
 }  // namespace custom_writer
 ```
 
-Attribute names and values are borrowed only for the duration of an element
-call. The writer copies the serialized bytes immediately.
+属性名和属性值只在元素调用期间被借用。写出器会在调用返回前立即复制
+序列化后的字节。
 
-## Writer Behavior
+## 写出器行为
 
-### Document rules
+### 文档规则
 
-- `writeDeclaration()` may be called once, before any element.
-- A document may omit the declaration.
-- Exactly one root element must be written before `close()`.
-- `close()` fails if elements remain open or if no root element was written.
-- After the first recorded failure, subsequent output-producing calls return
-  `false` without writing more bytes. `close()` still closes the stream but
-  returns `false` because the writer is in a failed state.
-- Destructor closes the file without throwing. Callers that need to observe
-  document-structure errors must call `close()` explicitly.
+- `writeDeclaration()` 只能调用一次，并且必须发生在任何元素之前。
+- 文档可以不包含 XML 声明。
+- 调用 `close()` 前必须写出且只能写出一个根元素。
+- 如果仍有元素未闭合，或者没有写出根元素，`close()` 会失败。
+- 第一次记录失败后，后续输出调用返回 `false`，且不再写入更多字节。
+  `close()` 仍会关闭文件流，但由于写出器处于失败状态，其返回值为
+  `false`。
+- 析构函数会关闭文件且不抛出异常。调用方若需要获知文档结构错误，必须
+  显式调用 `close()`。
 
-### Element rules
+### 元素规则
 
-- Element and attribute names must be non-empty.
-- ASCII name syntax is validated. UTF-8 bytes above ASCII are accepted without
-  Unicode normalization or Unicode name validation.
-- Duplicate attribute names on one element are rejected.
-- `startElement()` records nesting and emits the opening tag.
-- `writeText()` requires an open element, writes inline text, and may be called
-  multiple times.
-- Child elements and inline text cannot be mixed inside one element.
-- `endElement()` closes the innermost open element.
-- `emptyElement()` writes a self-closing element and may be used as the root.
+- 元素名和属性名不能为空。
+- 写出器会校验 ASCII 名称语法。大于 ASCII 范围的 UTF-8 字节会被接受，
+  但不执行 Unicode 规范化或 Unicode 名称校验。
+- 同一个元素中不允许出现重复属性名。
+- `startElement()` 记录嵌套关系并写出开始标签。
+- `writeText()` 要求当前存在未闭合元素，直接写出内联文本，并且可以多次
+  调用。
+- 同一个元素内不能同时包含内联文本和子元素。
+- `endElement()` 关闭最内层尚未闭合的元素。
+- `emptyElement()` 写出自闭合元素，也可以作为根元素使用。
 
-### Escaping
+### 转义
 
-Text content escapes `&`, `<`, and `>`.
+文本内容会转义 `&`、`<` 和 `>`。
 
-Attribute values escape `&`, `<`, `>`, `"`, and `'`. Attribute tab, newline,
-and carriage-return characters are written as `&#9;`, `&#10;`, and `&#13;`.
-All other bytes are written unchanged.
+属性值会转义 `&`、`<`、`>`、`"` 和 `'`。属性值中的制表符、换行符和
+回车符会分别写为 `&#9;`、`&#10;` 和 `&#13;`。其他字节保持原样。
 
-### Formatting
+### 格式
 
-The declaration, when present, is:
+写出 XML 声明时使用：
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 ```
 
-The writer emits:
+写出器遵循以下格式：
 
-- One element per line, except text-only elements.
-- Inline text between its opening and closing tags.
-- Two spaces per nesting level by default.
-- A final newline.
-- No byte-order mark.
-- LF line endings in a binary output stream.
+- 除仅包含文本的元素外，每个元素单独占一行。
+- 文本位于开始标签和结束标签之间，并保持内联。
+- 默认每个嵌套层级缩进两个空格。
+- 文件末尾包含一个换行符。
+- 不写出字节顺序标记。
+- 使用二进制输出流，并统一写入 LF 换行。
 
-Example:
+示例：
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -147,56 +145,54 @@ Example:
 </catalog>
 ```
 
-## Error Reporting
+## 错误报告
 
-The constructor attempts to truncate and open the output file. If opening
-fails, the writer remains closed and records a descriptive error.
+构造函数会尝试截断并打开输出文件。如果打开失败，写出器保持关闭状态，
+并记录一条描述性错误。
 
-Each mutating operation returns whether it succeeded. The first failure stores
-an error message retrievable through `lastError()`. I/O failures, invalid
-names, duplicate attributes, attempts to mix text and child elements, missing
-or duplicate roots, a declaration attempted after content, and close-time
-structure errors are all reported this way.
+每个会修改输出的操作都会返回是否成功。第一次失败时，写出器会保存错误
+信息，调用方可以通过 `lastError()` 获取。I/O 失败、非法名称、重复属性、
+尝试混合文本和子元素、缺少根元素、重复根元素、在内容之后请求 XML
+声明，以及关闭时的结构错误，都通过这一机制报告。
 
-A failed write may leave a partial output file. The writer does not delete or
-rewrite that file.
+写入失败后可能留下部分输出文件。写出器不会删除或重写该文件。
 
-## Command-Line Example
+## 命令行示例
 
-Usage:
+用法：
 
 ```text
 CustomWriter <output.xml>
 ```
 
-The program writes a small catalog document, prints a success path, and returns
-exit code 0. Wrong arguments print usage and return 2. Writer/open failures
-print `lastError()` to standard error and return 1.
+程序会写出一个小型目录文档，打印成功后的路径，并返回退出码 0。参数
+数量不正确时打印用法并返回 2。写出器或文件打开失败时，将
+`lastError()` 的内容打印到标准错误并返回 1。
 
-The command-line example always creates a new demonstration document; the
-reusable library is the general-purpose API for other callers.
+命令行程序始终创建一个新的演示文档；需要通用写能力的调用方应使用
+可复用的库接口。
 
-## Testing
+## 测试
 
-One dependency-free CTest executable verifies:
+一个无第三方依赖的 CTest 测试程序会校验：
 
-- Declaration, indentation, attributes, nested elements, inline text, and
-  empty elements produce the expected bytes.
-- Text and attribute escaping produces valid XML entities.
-- Invalid names and duplicate attributes are rejected.
-- Text and child-element mixing is rejected.
-- Missing or duplicate roots and missing end tags produce close failures.
-- File-open failure is reported.
-- Successful output can be read back through `std::ifstream`.
+- XML 声明、缩进、属性、嵌套元素、内联文本和空元素能生成预期字节。
+- 文本和属性转义能生成有效的 XML 实体。
+- 非法名称和重复属性会被拒绝。
+- 同一元素内混合文本和子元素会被拒绝。
+- 缺少根元素和缺少结束标签会在关闭时失败，重复根元素会在写出第二个
+  根元素时被拒绝。
+- 文件打开失败会被报告。
+- 成功写出后，可以通过 `std::ifstream` 回读内容。
 
-Tests use temporary files below the system temporary directory and remove
-them after each case.
+测试使用系统临时目录中的临时文件，并在每个测试用例结束后删除这些
+文件。
 
-## Build and Verification
+## 构建与验证
 
-The project uses CMake and C++17 with no third-party dependencies.
+项目使用 CMake 和 C++17，不依赖任何第三方库。
 
-Verification consists of:
+验证命令如下：
 
 ```text
 cmake -S . -B build
@@ -204,5 +200,5 @@ cmake --build build --config Release
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-The example executable is then run with a temporary XML path, and its output is
-read back to confirm that the expected document was produced.
+随后使用一个临时 XML 路径运行示例程序，并回读输出，确认生成了预期
+文档。
