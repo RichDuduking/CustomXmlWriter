@@ -1,0 +1,26 @@
+{
+  "files.associations": {
+    "*.h": "cpp",
+    "*.hpp": "cpp"
+  },
+  "cmake.generator": "MinGW Makefiles",
+  "cmake.additionalCompilerSearchDirs": [
+    "E:/Qt6.8.3/Tools/mingw1310_64/bin"
+  ],
+  "cmake.configureSettings": {
+    "CMAKE_BUILD_TYPE": "Debug",
+    "CMAKE_EXPORT_COMPILE_COMMANDS": true
+  },
+  "cmake.environment": {
+    "PATH": "E:/Qt6.8.3/Tools/mingw1310_64/bin;${env:PATH}"
+  },
+  "cmake.configureEnvironment": {
+    "PATH": "E:/Qt6.8.3/Tools/mingw1310_64/bin;${env:PATH}"
+  },
+  "cmake.buildEnvironment": {
+    "PATH": "E:/Qt6.8.3/Tools/mingw1310_64/bin;${env:PATH}"
+  },
+  "cmake.testEnvironment": {
+    "PATH": "E:/Qt6.8.3/Tools/mingw1310_64/bin;${env:PATH}"
+  }
+}

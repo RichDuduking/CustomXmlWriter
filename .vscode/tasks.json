@@ -1,0 +1,51 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "CMake: configure Debug (MinGW)",
+      "type": "shell",
+      "command": "E:/Qt6.8.3/Tools/CMake_64/bin/cmake.exe",
+      "args": [
+        "-S",
+        "${workspaceFolder}",
+        "-B",
+        "${workspaceFolder}/build",
+        "-G",
+        "MinGW Makefiles",
+        "-DCMAKE_BUILD_TYPE=Debug",
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PATH": "E:/Qt6.8.3/Tools/mingw1310_64/bin;${env:PATH}"
+        }
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "CMake: build Debug (MinGW)",
+      "type": "shell",
+      "command": "E:/Qt6.8.3/Tools/CMake_64/bin/cmake.exe",
+      "args": [
+        "--build",
+        "${workspaceFolder}/build",
+        "--parallel"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PATH": "E:/Qt6.8.3/Tools/mingw1310_64/bin;${env:PATH}"
+        }
+      },
+      "dependsOn": "CMake: configure Debug (MinGW)",
+      "problemMatcher": [
+        "$gcc"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}

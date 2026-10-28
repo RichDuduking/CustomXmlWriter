@@ -39,6 +39,17 @@ $env:PATH = "E:\Qt6.8.3\Tools\mingw1310_64\bin;" + $env:PATH
 命令行程序会生成一个包含书籍信息和空元素的小型目录文档。输出路径可以包含空格。
 如果使用其他 MinGW 安装，运行前同样需要保证对应的运行库位于 `PATH` 中。
 
+## 在 VS Code 中调试和跳转
+
+项目已包含 `.vscode/launch.json`、`.vscode/tasks.json` 和 clangd 配置：
+
+- 按 `F5` 使用 `Debug CustomWriter (MinGW GDB)` 配置，自动完成 Debug 构建并启动 GDB。
+- 按 `F12` 跳到符号的声明或定义；`Ctrl+F12` 可跳到具体实现。
+- `include/custom_writer/xml_writer.hpp` 是头文件，用来声明 `XmlWriter`；具体实现位于 `src/xml_writer.cpp`。
+- clangd 通过 `.clangd` 和 `build/compile_commands.json` 识别头文件路径及 C++ 标准库。
+
+首次拉取配置后需要执行一次 `Developer: Reload Window`，让 clangd 和 CMake Tools 重新加载。
+
 ## 作为库使用
 
 ```cpp

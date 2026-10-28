@@ -1,0 +1,16 @@
+CompileFlags:
+  CompilationDatabase: build
+  Add:
+    - --target=x86_64-w64-windows-gnu
+    - -isystem
+    - E:/Qt6.8.3/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++
+    - -isystem
+    - E:/Qt6.8.3/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/x86_64-w64-mingw32
+    - -isystem
+    - E:/Qt6.8.3/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/backward
+    - -isystem
+    - E:/Qt6.8.3/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include
+    - -isystem
+    - E:/Qt6.8.3/Tools/mingw1310_64/lib/gcc/x86_64-w64-mingw32/13.1.0/include-fixed
+    - -isystem
+    - E:/Qt6.8.3/Tools/mingw1310_64/x86_64-w64-mingw32/include

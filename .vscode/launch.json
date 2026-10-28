@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug CustomWriter (MinGW GDB)",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/CustomWriter.exe",
+      "args": [
+        "${workspaceFolder}/build/debug-output.xml"
+      ],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [
+        {
+          "name": "PATH",
+          "value": "E:/Qt6.8.3/Tools/mingw1310_64/bin;${env:PATH}"
+        }
+      ],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "miDebuggerPath": "E:/Qt6.8.3/Tools/mingw1310_64/bin/gdb.exe",
+      "setupCommands": [
+        {
+          "description": "Enable GDB pretty printing",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        },
+        {
+          "description": "Disable GDB pagination",
+          "text": "set pagination off",
+          "ignoreFailures": true
+        }
+      ],
+      "preLaunchTask": "CMake: build Debug (MinGW)"
+    }
+  ]
+}
