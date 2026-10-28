@@ -26,3 +26,15 @@ add_executable(xml_writer_tests
 )
 target_link_libraries(xml_writer_tests PRIVATE custom_writer)
 add_test(NAME xml_writer_tests COMMAND xml_writer_tests)
+
+add_executable(CustomWriter
+  src/main.cpp
+)
+target_link_libraries(CustomWriter PRIVATE custom_writer)
+
+add_test(NAME customwriter_cli
+  COMMAND ${CMAKE_COMMAND}
+    "-DWRITER_EXE=$<TARGET_FILE:CustomWriter>"
+    "-DOUTPUT_FILE=${CMAKE_CURRENT_BINARY_DIR}/cli-smoke.xml"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cli_smoke.cmake"
+)
