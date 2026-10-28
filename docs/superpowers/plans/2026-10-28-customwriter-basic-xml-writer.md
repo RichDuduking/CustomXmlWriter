@@ -40,7 +40,7 @@
 - Consumes: C++17 标准库。
 - Produces: `custom_writer::Attribute`、`custom_writer::XmlWriter`，以及 CMake 目标 `custom_writer` 和 `xml_writer_tests`。
 
-- [ ] **Step 1: 写基础文档的失败测试和构建入口**
+- [x] **Step 1: 写基础文档的失败测试和构建入口**
 
 Create `tests/xml_writer_test.cpp`:
 
@@ -170,7 +170,7 @@ Create `.gitignore`:
 *.user
 ```
 
-- [ ] **Step 2: 运行测试，确认当前失败**
+- [x] **Step 2: 运行测试，确认当前失败**
 
 Run:
 
@@ -183,7 +183,7 @@ ctest --test-dir build --output-on-failure
 
 Expected: CMake 配置或编译失败，因为 `src/xml_writer.cpp` 和 `include/custom_writer/xml_writer.hpp` 尚不存在。
 
-- [ ] **Step 3: 添加公共头文件和基础实现**
+- [x] **Step 3: 添加公共头文件和基础实现**
 
 Create `include/custom_writer/xml_writer.hpp`:
 
@@ -512,7 +512,7 @@ bool XmlWriter::close() {
 }  // namespace custom_writer
 ```
 
-- [ ] **Step 4: 运行基础测试，确认通过**
+- [x] **Step 4: 运行基础测试，确认通过**
 
 Run:
 
@@ -524,7 +524,7 @@ ctest --test-dir build --output-on-failure
 
 Expected: `xml_writer_tests` 通过。
 
-- [ ] **Step 5: 提交基础流式写出器**
+- [x] **Step 5: 提交基础流式写出器**
 
 ```powershell
 git add CMakeLists.txt .gitignore include/custom_writer/xml_writer.hpp src/xml_writer.cpp tests/xml_writer_test.cpp
@@ -544,7 +544,7 @@ git commit -m "feat: add basic XML writer"
 - Consumes: Task 1 的 `XmlWriter` 公共接口和测试辅助函数。
 - Produces: 对非法名称、重复属性、混合内容、重复根元素、缺少根元素、未闭合元素和文件打开失败的确定性错误行为。
 
-- [ ] **Step 1: 添加失败测试**
+- [x] **Step 1: 添加失败测试**
 
 Extend `tests/xml_writer_test.cpp` with these functions and declarations:
 
@@ -699,7 +699,7 @@ int main() {
 }
 ```
 
-- [ ] **Step 2: 运行测试，确认失败**
+- [x] **Step 2: 运行测试，确认失败**
 
 Run:
 
@@ -711,7 +711,7 @@ ctest --test-dir build --output-on-failure
 
 Expected: 新增测试失败，因为非法名称和重复属性尚未校验。
 
-- [ ] **Step 3: 在开始标签写出前完成全部校验**
+- [x] **Step 3: 在开始标签写出前完成全部校验**
 
 Add these private declarations to `XmlWriter`:
 
@@ -873,7 +873,7 @@ Keep the method-specific state errors, such as `writeText()` outside an
 element and `endElement()` without an open element, but return them through
 `fail("...")`.
 
-- [ ] **Step 4: 运行全部测试**
+- [x] **Step 4: 运行全部测试**
 
 Run:
 
@@ -885,7 +885,7 @@ ctest --test-dir build --output-on-failure
 
 Expected: `xml_writer_tests` 通过。
 
-- [ ] **Step 5: 提交校验和错误处理**
+- [x] **Step 5: 提交校验和错误处理**
 
 ```powershell
 git add include/custom_writer/xml_writer.hpp src/xml_writer.cpp tests/xml_writer_test.cpp
@@ -906,7 +906,7 @@ git commit -m "feat: validate XML writer state"
 - Consumes: `custom_writer::XmlWriter` 的完整公共接口。
 - Produces: `CustomWriter` 可执行文件、CTest 集成测试 `customwriter_cli` 和项目使用文档。
 
-- [ ] **Step 1: 添加命令行集成测试，确认失败**
+- [x] **Step 1: 添加命令行集成测试，确认失败**
 
 Create `tests/cli_smoke.cmake`:
 
@@ -978,7 +978,7 @@ cmake --build build
 
 Expected: 编译失败，因为 `src/main.cpp` 尚不存在。
 
-- [ ] **Step 2: 实现命令行程序**
+- [x] **Step 2: 实现命令行程序**
 
 Create `src/main.cpp`:
 
@@ -1027,7 +1027,7 @@ int main(int argc, char* argv[]) {
 }
 ```
 
-- [ ] **Step 3: 运行全部自动测试**
+- [x] **Step 3: 运行全部自动测试**
 
 Run:
 
@@ -1039,7 +1039,7 @@ ctest --test-dir build --output-on-failure
 
 Expected: `xml_writer_tests` 和 `customwriter_cli` 均通过。
 
-- [ ] **Step 4: 编写中文 README 并手工运行**
+- [x] **Step 4: 编写中文 README 并手工运行**
 
 Create `README.md` with:
 
@@ -1108,7 +1108,7 @@ Get-Content -Raw $output
 
 Expected: 命令返回 0，回读结果与 CLI 集成测试中的目录文档完全一致。
 
-- [ ] **Step 5: 提交命令行程序和文档**
+- [x] **Step 5: 提交命令行程序和文档**
 
 ```powershell
 git add CMakeLists.txt README.md src/main.cpp tests/cli_smoke.cmake
@@ -1119,8 +1119,8 @@ git commit -m "feat: add CustomWriter command-line example"
 
 ## Final Verification
 
-- [ ] 从干净状态配置 Release 构建。
-- [ ] 编译所有目标且无警告。
-- [ ] 运行 `ctest --test-dir build -C Release --output-on-failure`，全部测试通过。
-- [ ] 运行 `CustomWriter.exe` 生成 XML，并用 `Get-Content -Raw` 回读确认内容。
-- [ ] 运行 `git status --short`，确认工作区干净。
+- [x] 从干净状态配置 Release 构建。
+- [x] 编译所有目标且无警告。
+- [x] 运行 `ctest --test-dir build -C Release --output-on-failure`，全部测试通过。
+- [x] 运行 `CustomWriter.exe` 生成 XML，并用 `Get-Content -Raw` 回读确认内容。
+- [x] 运行 `git status --short`，确认工作区干净。
