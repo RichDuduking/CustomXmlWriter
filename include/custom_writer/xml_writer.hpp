@@ -59,6 +59,10 @@ class XmlWriter {
   bool writeEscaped(std::string_view value, bool attribute);
   bool checkStream();
   bool fail(std::string message);
+  bool validateElement(
+      std::string_view name,
+      const std::vector<Attribute>& attributes);
+  static bool isValidName(std::string_view name);
 
   std::ofstream output_;
   std::vector<ElementFrame> elements_;

@@ -40,6 +40,55 @@ bool XmlWriter::checkStream() {
   return output_.good() ? true : fail("Failed while writing XML output");
 }
 
+bool XmlWriter::isValidName(std::string_view name) {
+  if (name.empty()) {
+    return false;
+  }
+
+  for (std::size_t index = 0; index < name.size(); ++index) {
+    const unsigned char value =
+        static_cast<unsigned char>(name[index]);
+    if (value >= 0x80) {
+      continue;
+    }
+    const bool alpha =
+        (value >= 'A' && value <= 'Z') ||
+        (value >= 'a' && value <= 'z');
+    const bool digit = value >= '0' && value <= '9';
+    if (index == 0 && (alpha || value == '_' || value == ':')) {
+      continue;
+    }
+    if (index > 0 &&
+        (alpha || digit || value == '_' || value == '-' ||
+         value == '.' || value == ':')) {
+      continue;
+    }
+    return false;
+  }
+  return true;
+}
+
+bool XmlWriter::validateElement(
+    std::string_view name,
+    const std::vector<Attribute>& attributes) {
+  if (!isValidName(name)) {
+    return fail("Invalid XML element name");
+  }
+
+  for (std::size_t index = 0; index < attributes.size(); ++index) {
+    if (!isValidName(attributes[index].name)) {
+      return fail("Invalid XML attribute name");
+    }
+    for (std::size_t previous = 0; previous < index; ++previous) {
+      if (attributes[previous].name == attributes[index].name) {
+        return fail("Duplicate XML attribute name");
+      }
+    }
+  }
+
+  return true;
+}
+
 bool XmlWriter::writeDeclarationBytes() {
   output_ << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
   at_line_start_ = true;
@@ -125,8 +174,14 @@ bool XmlWriter::writeEscaped(std::string_view value, bool attribute) {
 }
 
 bool XmlWriter::writeDeclaration() {
-  if (failed_ || !isOpen() || declaration_written_ || root_written_) {
-    return fail("XML declaration must be written once before content");
+  if (failed_ || !isOpen()) {
+    return false;
+  }
+  if (declaration_written_) {
+    return fail("XML declaration can only be written once");
+  }
+  if (root_written_ || !elements_.empty()) {
+    return fail("XML declaration must precede document content");
   }
   declaration_written_ = true;
   return writeDeclarationBytes();
@@ -135,8 +190,14 @@ bool XmlWriter::writeDeclaration() {
 bool XmlWriter::startElement(
     std::string_view name,
     const std::vector<Attribute>& attributes) {
-  if (failed_ || !isOpen() || root_closed_) {
-    return fail("Cannot start element in the current document state");
+  if (failed_ || !isOpen()) {
+    return false;
+  }
+  if (!validateElement(name, attributes)) {
+    return false;
+  }
+  if (elements_.empty() && root_closed_) {
+    return fail("Document already has a root element");
   }
 
   if (!elements_.empty() &&
@@ -159,7 +220,10 @@ bool XmlWriter::startElement(
 }
 
 bool XmlWriter::writeText(std::string_view text) {
-  if (failed_ || !isOpen() || elements_.empty()) {
+  if (failed_ || !isOpen()) {
+    return false;
+  }
+  if (elements_.empty()) {
     return fail("Text must be written inside an element");
   }
   if (elements_.back().content == ContentKind::kChildren) {
@@ -170,7 +234,10 @@ bool XmlWriter::writeText(std::string_view text) {
 }
 
 bool XmlWriter::endElement() {
-  if (failed_ || !isOpen() || elements_.empty()) {
+  if (failed_ || !isOpen()) {
+    return false;
+  }
+  if (elements_.empty()) {
     return fail("No open element to close");
   }
   const ElementFrame frame = elements_.back();
@@ -191,8 +258,14 @@ bool XmlWriter::endElement() {
 bool XmlWriter::emptyElement(
     std::string_view name,
     const std::vector<Attribute>& attributes) {
-  if (failed_ || !isOpen() || root_closed_) {
-    return fail("Cannot write empty element in the current document state");
+  if (failed_ || !isOpen()) {
+    return false;
+  }
+  if (!validateElement(name, attributes)) {
+    return false;
+  }
+  if (elements_.empty() && root_closed_) {
+    return fail("Document already has a root element");
   }
   if (!elements_.empty() &&
       elements_.back().content == ContentKind::kText) {
