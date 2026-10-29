@@ -95,11 +95,10 @@ bool XmlWriter::writeDeclarationBytes() {
   return checkStream();
 }
 
-bool XmlWriter::writeIndent(std::size_t depth) {
-  for (std::size_t level = 0; level < depth; ++level) {
-    for (std::size_t index = 0; index < indent_width_; ++index) {
-      output_.put(' ');
-    }
+bool XmlWriter::writeCurrentIndent() {
+  const std::size_t space_count = element_stack_.size() * indent_width_;
+  for (std::size_t index = 0; index < space_count; ++index) {
+    output_.put(' ');
   }
   return checkStream();
 }
@@ -108,7 +107,8 @@ bool XmlWriter::beginElement(std::string_view name) {
   if (!at_line_start_) {
     output_.put('\n');
   }
-  if (!writeIndent(elements_.size())) {
+  // At this point the stack contains ancestors, so its size is the new depth.
+  if (!writeCurrentIndent()) {
     return false;
   }
   output_.put('<');
@@ -180,7 +180,7 @@ bool XmlWriter::writeDeclaration() {
   if (declaration_written_) {
     return fail("XML declaration can only be written once");
   }
-  if (root_written_ || !elements_.empty()) {
+  if (root_written_ || !element_stack_.empty()) {
     return fail("XML declaration must precede document content");
   }
   declaration_written_ = true;
@@ -196,12 +196,12 @@ bool XmlWriter::startElement(
   if (!validateElement(name, attributes)) {
     return false;
   }
-  if (elements_.empty() && root_closed_) {
+  if (element_stack_.empty() && root_closed_) {
     return fail("Document already has a root element");
   }
 
-  if (!elements_.empty() &&
-      elements_.back().content == ContentKind::kText) {
+  if (!element_stack_.empty() &&
+      element_stack_.back().content == ContentKind::kText) {
     return fail("Cannot mix text and child elements in one element");
   }
 
@@ -210,12 +210,12 @@ bool XmlWriter::startElement(
     return false;
   }
 
-  if (!elements_.empty()) {
-    elements_.back().content = ContentKind::kChildren;
+  if (!element_stack_.empty()) {
+    element_stack_.back().content = ContentKind::kChildren;
   } else {
     root_written_ = true;
   }
-  elements_.push_back({std::string(name), ContentKind::kNone});
+  element_stack_.push_back({std::string(name), ContentKind::kNone});
   return true;
 }
 
@@ -223,13 +223,13 @@ bool XmlWriter::writeText(std::string_view text) {
   if (failed_ || !isOpen()) {
     return false;
   }
-  if (elements_.empty()) {
+  if (element_stack_.empty()) {
     return fail("Text must be written inside an element");
   }
-  if (elements_.back().content == ContentKind::kChildren) {
+  if (element_stack_.back().content == ContentKind::kChildren) {
     return fail("Cannot mix text and child elements in one element");
   }
-  elements_.back().content = ContentKind::kText;
+  element_stack_.back().content = ContentKind::kText;
   return writeEscaped(text, false);
 }
 
@@ -237,19 +237,22 @@ bool XmlWriter::endElement() {
   if (failed_ || !isOpen()) {
     return false;
   }
-  if (elements_.empty()) {
+  if (element_stack_.empty()) {
     return fail("No open element to close");
   }
-  const ElementFrame frame = elements_.back();
+
+  ElementFrame frame = std::move(element_stack_.back());
+  element_stack_.pop_back();
+
+  // The stack now represents the parent depth, which is the closing tag depth.
   if (frame.content == ContentKind::kChildren && at_line_start_) {
-    if (!writeIndent(elements_.size() - 1)) {
+    if (!writeCurrentIndent()) {
       return false;
     }
   }
   output_ << "</" << frame.name << ">\n";
   at_line_start_ = true;
-  elements_.pop_back();
-  if (elements_.empty()) {
+  if (element_stack_.empty()) {
     root_closed_ = true;
   }
   return checkStream();
@@ -264,11 +267,11 @@ bool XmlWriter::emptyElement(
   if (!validateElement(name, attributes)) {
     return false;
   }
-  if (elements_.empty() && root_closed_) {
+  if (element_stack_.empty() && root_closed_) {
     return fail("Document already has a root element");
   }
-  if (!elements_.empty() &&
-      elements_.back().content == ContentKind::kText) {
+  if (!element_stack_.empty() &&
+      element_stack_.back().content == ContentKind::kText) {
     return fail("Cannot mix text and child elements in one element");
   }
   if (!beginElement(name) || !writeAttributes(attributes)) {
@@ -276,8 +279,8 @@ bool XmlWriter::emptyElement(
   }
   output_ << "/>\n";
   at_line_start_ = true;
-  if (!elements_.empty()) {
-    elements_.back().content = ContentKind::kChildren;
+  if (!element_stack_.empty()) {
+    element_stack_.back().content = ContentKind::kChildren;
   } else {
     root_written_ = true;
     root_closed_ = true;
@@ -293,7 +296,7 @@ bool XmlWriter::close() {
     output_.close();
     return false;
   }
-  if (!elements_.empty()) {
+  if (!element_stack_.empty()) {
     fail("Cannot close document with open elements");
     output_.close();
     return false;

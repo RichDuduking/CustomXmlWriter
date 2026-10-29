@@ -55,7 +55,7 @@ class XmlWriter {
   bool beginElement(std::string_view name);
   bool writeAttributes(const std::vector<Attribute>& attributes);
   bool finishElementStart();
-  bool writeIndent(std::size_t depth);
+  bool writeCurrentIndent();
   bool writeEscaped(std::string_view value, bool attribute);
   bool checkStream();
   bool fail(std::string message);
@@ -65,7 +65,10 @@ class XmlWriter {
   static bool isValidName(std::string_view name);
 
   std::ofstream output_;
-  std::vector<ElementFrame> elements_;
+
+  // The back is the innermost open element. Its size is the nesting depth.
+  std::vector<ElementFrame> element_stack_;
+
   std::size_t indent_width_ = 2;
   bool declaration_written_ = false;
   bool root_written_ = false;
